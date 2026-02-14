@@ -10,3 +10,6 @@ python app.py
 
 Run tests:
 pytest
+
+Webhook test - CI automatic build
+
