@@ -64,7 +64,7 @@ pipeline {
         // --------------------------------
         // 4️⃣ Deploy Application (Only main branch)
         // --------------------------------
-        sstage('Deploy') {
+        stage('Deploy') {
             steps {
                 echo "Deploying Flask app using Gunicorn..."
 
