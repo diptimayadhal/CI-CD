@@ -1,32 +1,30 @@
 pipeline {
 
-    // Agent tells Jenkins where to run this pipeline
-    // "any" means run on any available executor (your EC2 server)
+    // Run on any available agent (your EC2 Jenkins server)
     agent any
 
-    // Environment variables available in all stages
+    // Environment variables available throughout pipeline
     environment {
-        APP_ENV = "production"
         VENV_DIR = "venv"
         PORT = "5000"
+        APP_ENV = "production"
     }
 
     stages {
 
-        // -------------------------------
-        // Stage 1: Checkout Source Code
-        // -------------------------------
+        // --------------------------------
+        // 1️⃣ Checkout Code from GitHub
+        // --------------------------------
         stage('Checkout') {
             steps {
-                echo "Checking out source code from GitHub..."
-                // This pulls the latest code from the repository
+                echo "Checking out source code..."
                 checkout scm
             }
         }
 
-        // --------------------------------------
-        // Stage 2: Setup Python Environment
-        // --------------------------------------
+        // --------------------------------
+        // 2️⃣ Setup Python Environment
+        // --------------------------------
         stage('Setup Environment') {
             steps {
                 echo "Creating virtual environment and installing dependencies..."
@@ -35,71 +33,60 @@ pipeline {
                     # Show Python version
                     python3 --version
 
-                    # Remove old virtual environment if exists
+                    # Remove old venv if exists
                     rm -rf $VENV_DIR
 
                     # Create new virtual environment
                     python3 -m venv $VENV_DIR
 
-                    # Activate virtual environment
-                    source $VENV_DIR/bin/activate
-
-                    # Upgrade pip
-                    pip install --upgrade pip
+                    # Upgrade pip inside virtual environment
+                    $VENV_DIR/bin/pip install --upgrade pip
 
                     # Install project dependencies
-                    pip install -r requirements.txt
+                    $VENV_DIR/bin/pip install -r requirements.txt
                 '''
             }
         }
 
-        // -------------------------------
-        // Stage 3: Run Automated Tests
-        // -------------------------------
+        // --------------------------------
+        // 3️⃣ Run Automated Tests
+        // --------------------------------
         stage('Run Tests') {
             steps {
                 echo "Running pytest..."
 
                 sh '''
-                    source $VENV_DIR/bin/activate
-
-                    # Run test cases
-                    pytest
+                    $VENV_DIR/bin/pytest
                 '''
             }
         }
 
-        // -------------------------------
-        // Stage 4: Deploy Application
-        // -------------------------------
+        // --------------------------------
+        // 4️⃣ Deploy Application (Only main branch)
+        // --------------------------------
         stage('Deploy') {
 
-            // Only deploy when branch is main
             when {
                 branch 'main'
             }
 
             steps {
-                echo "Deploying Flask application using Gunicorn..."
+                echo "Deploying Flask app using Gunicorn..."
 
                 sh '''
-                    source $VENV_DIR/bin/activate
-
                     # Stop old Gunicorn process if running
                     pkill -f gunicorn || true
 
                     # Start Gunicorn in background
-                    # -w 2 = 2 worker processes
-                    # -b = bind to 0.0.0.0:5000
-                    nohup gunicorn -w 2 -b 0.0.0.0:$PORT app:app > gunicorn.log 2>&1 &
+                    nohup $VENV_DIR/bin/gunicorn -w 2 -b 0.0.0.0:$PORT app:app > gunicorn.log 2>&1 &
                 '''
             }
         }
     }
 
-    // --------------------------------------
-    // Post Actions (After Pipeline Ends)
-    // --------------------------------------
+    // --------------------------------
+    // Post Actions
+    // --------------------------------
     post {
 
         success {
@@ -107,7 +94,7 @@ pipeline {
         }
 
         failure {
-            echo "Build FAILED - Check console logs."
+            echo "Build FAILED - Check console output."
         }
 
         always {
