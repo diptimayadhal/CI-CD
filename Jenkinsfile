@@ -65,23 +65,16 @@ pipeline {
         // 4️⃣ Deploy Application (Only main branch)
         // --------------------------------
         stage('Deploy') {
-
-            when {
-                branch 'main'
-            }
-
             steps {
                 echo "Deploying Flask app using Gunicorn..."
 
                 sh '''
-                    # Stop old Gunicorn process if running
                     pkill -f gunicorn || true
-
-                    # Start Gunicorn in background
                     nohup $VENV_DIR/bin/gunicorn -w 2 -b 0.0.0.0:$PORT app:app > gunicorn.log 2>&1 &
                 '''
             }
         }
+
     }
 
     // --------------------------------
