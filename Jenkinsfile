@@ -16,9 +16,8 @@ pipeline {
                 sh '''
                     python3 --version
                     python3 -m venv venv
-                    source venv/bin/activate
-                    pip install --upgrade pip
-                    pip install -r requirements.txt
+                    ./venv/bin/pip install --upgrade pip
+                    ./venv/bin/pip install -r requirements.txt
                 '''
             }
         }
@@ -27,8 +26,7 @@ pipeline {
             steps {
                 echo 'Running pytest...'
                 sh '''
-                    source venv/bin/activate
-                    pytest
+                    ./venv/bin/pytest
                 '''
             }
         }
