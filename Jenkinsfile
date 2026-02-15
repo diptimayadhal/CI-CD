@@ -64,13 +64,15 @@ pipeline {
         // --------------------------------
         // 4️⃣ Deploy Application (Only main branch)
         // --------------------------------
-        stage('Deploy') {
+        sstage('Deploy') {
             steps {
                 echo "Deploying Flask app using Gunicorn..."
 
                 sh '''
                     pkill -f gunicorn || true
-                    nohup $VENV_DIR/bin/gunicorn -w 2 -b 0.0.0.0:$PORT app:app > gunicorn.log 2>&1 &
+
+                    # Start gunicorn fully detached from Jenkins
+                    nohup setsid $VENV_DIR/bin/gunicorn -w 2 -b 0.0.0.0:$PORT app:app > gunicorn.log 2>&1 < /dev/null &
                 '''
             }
         }
